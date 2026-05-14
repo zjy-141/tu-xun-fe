@@ -6,8 +6,6 @@ import type {
   PendingAttempt,
   ReviewForm,
   ReviewAttemptResponse,
-  PhotoDetail,
-  Prize,
 } from '../types';
 
 export const adminApi = {
