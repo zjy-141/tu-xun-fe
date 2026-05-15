@@ -17,12 +17,13 @@ export default defineConfig({
         target: 'http://127.0.0.1:8088',
         changeOrigin: true,
       },
+      '/uploads': {
+        target: 'http://127.0.0.1:8088',
+        changeOrigin: true,
+      },
     },
   },
 })
-//     server: {
-//         host: '127.0.0.1',
-//         port: 5173,
 //         proxy: {
 //         '/api': {
 //          // target: "https://shijian.tiaozhan.com",

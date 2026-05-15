@@ -5,11 +5,14 @@ import type {
   PhotoListItem,
   PhotoDetail,
   UploadPhotoForm,
+  UploadedPhoto,
   SubmitAttemptForm,
   SubmitAttemptResponse,
   MyAttemptsData,
   Story,
+  StoryCreated,
   StoryForm,
+  StoryMediaResponse,
 } from '../types';
 
 export const photosApi = {
@@ -20,7 +23,7 @@ export const photosApi = {
     formData.append('title', data.title);
     if (data.description) formData.append('description', data.description);
     formData.append('location_secret', data.location_secret);
-    return client.post<ApiResponse<PhotoDetail>>('/photos', formData, {
+    return client.post<ApiResponse<UploadedPhoto>>('/photos', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
@@ -51,9 +54,18 @@ export const photosApi = {
 
   // 发布故事
   postStory: (photoId: number, data: StoryForm) =>
-    client.post<ApiResponse<Story>>(`/photos/${photoId}/stories`, data),
+    client.post<ApiResponse<StoryCreated>>(`/photos/${photoId}/stories`, data),
 
   // 获取故事列表
   getStories: (photoId: number) =>
     client.get<ApiResponse<{ stories: Story[] }>>(`/photos/${photoId}/stories`),
+
+  // 上传故事媒体
+  uploadStoryMedia: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return client.post<ApiResponse<StoryMediaResponse>>('/stories/media', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };

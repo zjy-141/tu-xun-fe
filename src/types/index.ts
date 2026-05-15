@@ -25,8 +25,12 @@ export interface User {
   id: number;
   student_id: string;
   name: string;
+  email: string;
   level: number;
-  prize_count?: number;
+  prize_count: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
 }
 
 export interface RegisterForm {
@@ -91,6 +95,23 @@ export interface UploadPhotoForm {
   title: string;
   description?: string;
   location_secret: string;
+}
+
+/** POST /photos 上传成功响应 */
+export interface UploadedPhoto {
+  id: number;
+  user_id: number;
+  title: string;
+  description: string;
+  image_url: string;
+  thumb_url: string;
+  status: PhotoStatus;
+  solved: boolean;
+  attempts_count: number;
+  author: User;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
 }
 
 // ========== 答题相关 ==========
@@ -174,6 +195,7 @@ export interface Prize {
 
 // ========== 故事相关 ==========
 
+/** GET /photos/:id/stories 列表项 */
 export interface Story {
   id: number;
   user_name: string;
@@ -183,7 +205,26 @@ export interface Story {
   created_at: string;
 }
 
+/** POST /photos/:id/stories 创建成功响应 */
+export interface StoryCreated {
+  id: number;
+  photo_id: number;
+  user_id: number;
+  content: string;
+  media_url: string | null;
+  likes: number;
+  user: User;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
 export interface StoryForm {
   content: string;
   media_url?: string;
+}
+
+/** POST /stories/media 响应 */
+export interface StoryMediaResponse {
+  media_url: string;
 }

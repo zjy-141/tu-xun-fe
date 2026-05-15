@@ -9,7 +9,7 @@ export const authApi = {
     client.post<ApiResponse<User>>('/auth/login', data),
 
   logout: () =>
-    client.post<ApiResponse<null>>('/auth/logout'),
+    client.delete<ApiResponse<null>>('/auth/logout'),
 
   me: () =>
     client.get<ApiResponse<User>>('/auth/me'),

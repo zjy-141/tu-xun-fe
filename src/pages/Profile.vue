@@ -15,13 +15,14 @@ const { user } = useAuth()
         </div>
         <h2 class="text-xl font-bold text-white">{{ user.name }}</h2>
         <p class="text-white/70 text-sm mt-1">{{ user.student_id }}</p>
+        <p class="text-white/50 text-xs mt-0.5">{{ user.email }}</p>
         <span v-if="user.level >= 1" class="inline-block mt-2 px-3 py-0.5 rounded-full bg-white/20 text-white text-xs font-medium">管理员</span>
       </div>
 
       <div class="divide-y divide-border">
         <router-link to="/prizes" class="flex items-center justify-between px-6 py-4 hover:bg-bg transition-colors">
           <div class="flex items-center gap-3"><span class="text-xl">🎁</span><span class="text-text font-medium">我的奖品</span></div>
-          <span class="text-text-light">{{ user.prize_count ?? 0 }} 个 ›</span>
+          <span class="text-text-light">{{ user.prize_count }} 个 ›</span>
         </router-link>
         <router-link to="/upload" class="flex items-center justify-between px-6 py-4 hover:bg-bg transition-colors">
           <div class="flex items-center gap-3"><span class="text-xl">📸</span><span class="text-text font-medium">投稿新机位</span></div>
