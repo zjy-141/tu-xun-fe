@@ -2,11 +2,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { prizesApi } from '../../api/prizes'
 import { adminApi } from '../../api/admin'
+import { extractApiError } from '../../api/client'
 import Loading from '../../components/Loading.vue'
 import Empty from '../../components/Empty.vue'
-import type { Prize } from '../../types'
+import type { PrizeItem } from '../../types'
 
-const prizes = ref<Prize[]>([])
+const prizes = ref<PrizeItem[]>([])
 const loading = ref(true)
 const claiming = ref<number | null>(null)
 
@@ -26,9 +27,15 @@ async function handleClaim(prizeId: number) {
   claiming.value = prizeId
   try {
     await adminApi.claimPrize(prizeId)
-    prizes.value = prizes.value.map(p => p.id === prizeId ? { ...p, status: 'claimed' as const } : p)
-  } catch { /* ignore */ }
-  finally { claiming.value = null }
+    prizes.value = prizes.value.map(p =>
+      p.id === prizeId ? { ...p, status: 'claimed' as const } : p,
+    )
+  } catch (err: unknown) {
+    const apiErr = extractApiError(err)
+    alert(apiErr.message || '操作失败')
+  } finally {
+    claiming.value = null
+  }
 }
 
 onMounted(fetchPrizes)

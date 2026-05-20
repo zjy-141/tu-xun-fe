@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { photosApi } from '../api/photos'
+import { attemptsApi } from '../api/attempts'
 import Loading from '../components/Loading.vue'
 import Empty from '../components/Empty.vue'
 import type { MyAttemptsData } from '../types'
@@ -24,7 +24,7 @@ function statusLabel(status: string) {
 onMounted(async () => {
   loading.value = true
   try {
-    const res = await photosApi.myAttempts(photoId)
+    const res = await attemptsApi.myAttempts(photoId)
     if (res.data.success) data.value = res.data.data
   } catch { /* ignore */ }
   finally { loading.value = false }

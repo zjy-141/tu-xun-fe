@@ -1,8 +1,8 @@
-import client from './client';
-import type { ApiResponse, Prize } from '../types';
+import client from './client'
+import type { ApiResponse, MyPrizesData } from '../types'
 
 export const prizesApi = {
-  // 获取我的奖品
+  /** GET /api/users/me/prizes — 我的奖品 */
   getMyPrizes: () =>
-    client.get<ApiResponse<{ prizes: Prize[] }>>('/users/me/prizes'),
-};
+    client.get<ApiResponse<MyPrizesData>>('/users/me/prizes'),
+}

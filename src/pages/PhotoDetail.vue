@@ -2,9 +2,10 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { photosApi } from '../api/photos'
+import { storiesApi } from '../api/stories'
 import { useAuth } from '../composables/useAuth'
 import Loading from '../components/Loading.vue'
-import type { PhotoDetail, Story } from '../types'
+import type { PhotoDetail, StoryItem } from '../types'
 
 const route = useRoute()
 const { user } = useAuth()
@@ -12,7 +13,7 @@ const { user } = useAuth()
 const photoId = computed(() => Number(route.params.id))
 
 const photo = ref<PhotoDetail | null>(null)
-const stories = ref<Story[]>([])
+const stories = ref<StoryItem[]>([])
 const storyText = ref('')
 const postingStory = ref(false)
 const loading = ref(true)
@@ -30,7 +31,7 @@ async function fetchDetail() {
 async function fetchStories() {
   storyLoading.value = true
   try {
-    const res = await photosApi.getStories(photoId.value)
+    const res = await storiesApi.listByPhoto(photoId.value)
     if (res.data.success) stories.value = res.data.data.stories
   } catch { /* ignore */ }
   finally { storyLoading.value = false }
@@ -40,9 +41,9 @@ async function handlePostStory() {
   if (!storyText.value.trim()) return
   postingStory.value = true
   try {
-    await photosApi.postStory(photoId.value, { content: storyText.value })
+    await storiesApi.create(photoId.value, { content: storyText.value })
     storyText.value = ''
-    const res = await photosApi.getStories(photoId.value)
+    const res = await storiesApi.listByPhoto(photoId.value)
     if (res.data.success) stories.value = res.data.data.stories
   } catch { /* ignore */ }
   finally { postingStory.value = false }

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { photosApi } from '../api/photos'
+import { attemptsApi } from '../api/attempts'
+import { extractApiError } from '../api/client'
 import ImageUpload from '../components/ImageUpload.vue'
 
 const route = useRoute()
@@ -19,7 +20,7 @@ async function handleSubmit() {
   if (!guessedLocation.value.trim()) { error.value = '请描述你猜测的地点'; return }
   submitting.value = true
   try {
-    const res = await photosApi.submitAttempt(photoId, {
+    const res = await attemptsApi.submit(photoId, {
       image: imageFile.value,
       guessed_location: guessedLocation.value.trim(),
     })
@@ -28,12 +29,8 @@ async function handleSubmit() {
       router.push(`/photos/${photoId}`)
     }
   } catch (err: unknown) {
-    const data = err as { message?: string; code?: number }
-    if (data.code === 5) {
-      error.value = '你已有待审核的答题记录，请等待审核结果'
-    } else {
-      error.value = data.message || '提交失败'
-    }
+    const apiErr = extractApiError(err)
+    error.value = apiErr.message || '提交失败'
   } finally {
     submitting.value = false
   }

@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import { authApi } from '../api/auth'
-import type { User, LoginForm, RegisterForm } from '../types'
+import type { User, LoginParams, RegisterParams } from '../types'
 
 const user = ref<User | null>(null)
 const loading = ref(true)
@@ -8,6 +8,7 @@ const loading = ref(true)
 export function useAuth() {
   const isAdmin = computed(() => user.value !== null && user.value.level >= 1)
 
+  /** 从服务端刷新当前用户状态 */
   async function refreshUser() {
     try {
       const res = await authApi.me()
@@ -19,16 +20,21 @@ export function useAuth() {
     }
   }
 
-  async function login(data: LoginForm) {
+  /** 登录 */
+  async function login(data: LoginParams) {
     const res = await authApi.login(data)
     if (res.data.success) user.value = res.data.data
+    return res.data
   }
 
-  async function register(data: RegisterForm) {
+  /** 注册 */
+  async function register(data: RegisterParams) {
     const res = await authApi.register(data)
     if (res.data.success) user.value = res.data.data
+    return res.data
   }
 
+  /** 登出 */
   async function logout() {
     await authApi.logout()
     user.value = null

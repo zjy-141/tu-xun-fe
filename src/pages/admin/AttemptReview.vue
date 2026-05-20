@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { adminApi } from '../../api/admin'
+import { extractApiError } from '../../api/client'
 import Loading from '../../components/Loading.vue'
 import Empty from '../../components/Empty.vue'
 import Pagination from '../../components/Pagination.vue'
@@ -31,15 +32,22 @@ async function handleReview(attemptId: number, action: ReviewAction) {
   reviewing.value = attemptId
   result.value = null
   try {
-    const res = await adminApi.reviewAttempt(attemptId, { action, reject_reason: action === 'reject' ? rejectReason.value : undefined })
+    const res = await adminApi.reviewAttempt(attemptId, {
+      action,
+      reject_reason: action === 'reject' ? rejectReason.value : undefined,
+    })
     if (res.data.success) {
       result.value = res.data.data
       attempts.value = attempts.value.filter(a => a.attempt_id !== attemptId)
       rejectId.value = null
       rejectReason.value = ''
     }
-  } catch { /* ignore */ }
-  finally { reviewing.value = null }
+  } catch (err: unknown) {
+    const apiErr = extractApiError(err)
+    alert(apiErr.message || '操作失败')
+  } finally {
+    reviewing.value = null
+  }
 }
 
 onMounted(fetchAttempts)

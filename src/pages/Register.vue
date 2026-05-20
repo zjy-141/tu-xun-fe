@@ -2,30 +2,32 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
+import { showToast } from '../composables/toast'
+import { extractApiError } from '../api/client'
 
 const { register } = useAuth()
 const router = useRouter()
 
 const form = ref({ student_id: '', name: '', password: '', email: '' })
-const error = ref('')
 const submitting = ref(false)
 
 async function handleSubmit() {
-  error.value = ''
   if (!form.value.student_id || !form.value.name || !form.value.password || !form.value.email) {
-    error.value = '请填写所有必填字段'
+    showToast('error', '请填写所有必填字段')
     return
   }
   if (form.value.password.length < 6 || form.value.password.length > 20) {
-    error.value = '密码长度需在 6-20 位之间'
+    showToast('error', '密码长度需在 6-20 位之间')
     return
   }
   submitting.value = true
   try {
     await register(form.value)
-    router.push('/')
+    showToast('success', '注册成功，欢迎加入！')
+    setTimeout(() => router.push('/'), 800)
   } catch (err: unknown) {
-    error.value = (err as { message?: string })?.message || '注册失败，请稍后重试'
+    const apiErr = extractApiError(err)
+    showToast('error', apiErr.message || '注册失败，请稍后重试')
   } finally {
     submitting.value = false
   }
@@ -36,7 +38,6 @@ async function handleSubmit() {
   <div class="max-w-sm mx-auto mt-10">
     <h1 class="text-2xl font-bold text-center mb-8">注册</h1>
     <form @submit.prevent="handleSubmit" class="bg-card rounded-xl p-6 border border-border space-y-4">
-      <div v-if="error" class="bg-red-50 text-accent text-sm p-3 rounded-lg">{{ error }}</div>
       <div>
         <label class="block text-sm font-medium text-text mb-1">学号</label>
         <input v-model="form.student_id" type="text" class="w-full px-3 py-2.5 rounded-lg border border-border bg-bg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" placeholder="请输入学号" />

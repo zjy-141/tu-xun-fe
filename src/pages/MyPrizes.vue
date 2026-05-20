@@ -3,9 +3,9 @@ import { ref, onMounted } from 'vue'
 import { prizesApi } from '../api/prizes'
 import Loading from '../components/Loading.vue'
 import Empty from '../components/Empty.vue'
-import type { Prize } from '../types'
+import type { PrizeItem } from '../types'
 
-const prizes = ref<Prize[]>([])
+const prizes = ref<PrizeItem[]>([])
 const loading = ref(true)
 
 onMounted(async () => {

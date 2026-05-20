@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { adminApi } from '../../api/admin'
+import { extractApiError } from '../../api/client'
 import Loading from '../../components/Loading.vue'
 import Empty from '../../components/Empty.vue'
 import Pagination from '../../components/Pagination.vue'
@@ -29,12 +30,19 @@ async function fetchPhotos() {
 async function handleReview(photoId: number, action: ReviewAction) {
   reviewing.value = photoId
   try {
-    await adminApi.reviewPhoto(photoId, { action, reject_reason: action === 'reject' ? rejectReason.value : undefined })
+    await adminApi.reviewPhoto(photoId, {
+      action,
+      reject_reason: action === 'reject' ? rejectReason.value : undefined,
+    })
     photos.value = photos.value.filter(p => p.id !== photoId)
     rejectId.value = null
     rejectReason.value = ''
-  } catch { /* ignore */ }
-  finally { reviewing.value = null }
+  } catch (err: unknown) {
+    const apiErr = extractApiError(err)
+    alert(apiErr.message || '操作失败')
+  } finally {
+    reviewing.value = null
+  }
 }
 
 onMounted(fetchPhotos)

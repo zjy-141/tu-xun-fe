@@ -22,19 +22,20 @@
     </section>
 
     <section class="grid sm:grid-cols-3 gap-6 w-full max-w-4xl mb-16">
-      <div
+      <router-link
         v-for="item in [
-          { icon: '📸', title: '投稿机位', desc: '分享你发现的校园隐蔽机位，让更多人看见西交之美。' },
-          { icon: '🔎', title: '猜图挑战', desc: '根据照片线索找到对应地点，拍摄同一角度照片来验证。' },
-          { icon: '🎁', title: '赢取奖品', desc: '首个答对者获得纪念奖品，用实力证明你对校园的熟悉。' },
+          { icon: '📸', title: '投稿机位', desc: '分享你发现的校园隐蔽机位，让更多人看见西交之美。', to: '/upload' },
+          { icon: '🔎', title: '猜图挑战', desc: '根据照片线索找到对应地点，拍摄同一角度照片来验证。', to: '/photos' },
+          { icon: '🎁', title: '赢取奖品', desc: '首个答对者获得纪念奖品，用实力证明你对校园的熟悉。', to: '/prizes' },
         ]"
         :key="item.title"
-        class="bg-card rounded-xl p-6 border border-border text-center hover:shadow-md transition-shadow"
+        :to="item.to"
+        class="bg-card rounded-xl p-6 border border-border text-center hover:shadow-md hover:border-primary/30 transition-all cursor-pointer block"
       >
         <div class="text-4xl mb-3">{{ item.icon }}</div>
         <h3 class="font-semibold text-text mb-2">{{ item.title }}</h3>
         <p class="text-sm text-text-light leading-relaxed">{{ item.desc }}</p>
-      </div>
+      </router-link>
     </section>
 
     <section class="text-center py-12">

@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { photosApi } from '../api/photos'
+import { extractApiError } from '../api/client'
 import ImageUpload from '../components/ImageUpload.vue'
 
 const router = useRouter()
@@ -28,7 +29,8 @@ async function handleSubmit() {
     })
     if (res.data.success) router.push(`/photos/${res.data.data.id}`)
   } catch (err: unknown) {
-    error.value = (err as { message?: string })?.message || '上传失败'
+    const apiErr = extractApiError(err)
+    error.value = apiErr.message || '上传失败'
   } finally {
     submitting.value = false
   }
