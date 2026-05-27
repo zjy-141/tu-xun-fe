@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { photosApi } from '../api/photos'
 import { attemptsApi } from '../api/attempts'
 import { likesApi } from '../api/likes'
+import { commentsApi } from '../api/comments'
 import { useAuth } from '../composables/useAuth'
 import { showToast } from '../composables/toast'
 import { extractApiError } from '../api/client'
@@ -34,6 +35,9 @@ const attempts = ref<AttemptForm[]>([])
 const attemptsTotal = ref(0)
 const attemptPage = ref(1)
 const attemptLoading = ref(false)
+
+const commentLikeMap = ref<Record<number, { liked: boolean; count: number }>>({})
+const attemptLikeMap = ref<Record<number, { liked: boolean; count: number }>>({})
 
 async function fetchDetail() {
   loading.value = true
@@ -112,9 +116,39 @@ async function fetchAttempts() {
   finally { attemptLoading.value = false }
 }
 
+function getCommentLike(id: number) {
+  const entry = commentLikeMap.value[id]
+  return entry || { liked: false, count: 0 }
+}
+
+function getAttemptLike(id: number) {
+  const entry = attemptLikeMap.value[id]
+  return entry || { liked: false, count: 0 }
+}
+
+async function toggleCommentLike(commentId: number) {
+  if (!user.value) { router.push('/login'); return }
+  try {
+    const res = await likesApi.toggleCommentLike(commentId)
+    if (res.data.success) {
+      commentLikeMap.value = { ...commentLikeMap.value, [commentId]: { liked: res.data.data.liked, count: res.data.data.count } }
+    }
+  } catch { /* ignore */ }
+}
+
+async function toggleAttemptLike(attemptId: number) {
+  if (!user.value) { router.push('/login'); return }
+  try {
+    const res = await likesApi.toggleAttemptLike(attemptId)
+    if (res.data.success) {
+      attemptLikeMap.value = { ...attemptLikeMap.value, [attemptId]: { liked: res.data.data.liked, count: res.data.data.count } }
+    }
+  } catch { /* ignore */ }
+}
+
 async function init() {
   await fetchDetail()
-  await fetchLikeStatus()
+  fetchLikeStatus()
   fetchComments()
   fetchAttempts()
 }
@@ -191,7 +225,9 @@ init()
                 <span class="text-xs text-text-light">{{ formatDate(a.created_at) }}</span>
               </div>
               <p class="text-sm text-text">猜测地点：{{ a.guessed_location }}</p>
-              <span class="text-xs text-text-light">❤️ {{ a.likes_count }}</span>
+              <button @click="toggleAttemptLike(a.id)" class="flex items-center gap-1 text-xs mt-1 transition-colors" :class="getAttemptLike(a.id).liked ? 'text-red-500' : 'text-text-light hover:text-red-400'">
+                {{ getAttemptLike(a.id).liked ? '❤️' : '🤍' }} <span>{{ getAttemptLike(a.id).count || a.likes_count }}</span>
+              </button>
             </div>
           </div>
           <Pagination v-if="attemptsTotal > 10" :page="attemptPage" :total="attemptsTotal" :limit="10" @change="(p: number) => { attemptPage = p; fetchAttempts() }" />
@@ -233,6 +269,9 @@ init()
               <span class="text-xs text-text-light">{{ formatDate(c.created_at) }}</span>
             </div>
             <p class="text-sm text-text leading-relaxed">{{ c.content }}</p>
+            <button @click="toggleCommentLike(c.id)" class="flex items-center gap-1 text-xs mt-1 transition-colors" :class="getCommentLike(c.id).liked ? 'text-red-500' : 'text-text-light hover:text-red-400'">
+              {{ getCommentLike(c.id).liked ? '❤️' : '🤍' }} <span>{{ getCommentLike(c.id).count || c.likes_count }}</span>
+            </button>
           </div>
           <Pagination v-if="commentsTotal > 10" :page="commentPage" :total="commentsTotal" :limit="10" @change="(p: number) => { commentPage = p; fetchComments() }" />
         </div>

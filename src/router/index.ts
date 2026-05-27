@@ -14,6 +14,7 @@ const router = createRouter({
     { path: '/photos/:id/my-attempts', component: () => import('../pages/MyAttempts.vue'), meta: { auth: true }, props: true },
     { path: '/prizes', component: () => import('../pages/MyPrizes.vue'), meta: { auth: true } },
     { path: '/profile', component: () => import('../pages/Profile.vue'), meta: { auth: true } },
+    { path: '/users/:id', component: () => import('../pages/UserProfile.vue') },
     { path: '/messages', component: () => import('../pages/Messages.vue'), meta: { auth: true } },
     { path: '/admin/photos', component: () => import('../pages/admin/PhotoReview.vue'), meta: { auth: true, admin: true } },
     { path: '/admin/attempts', component: () => import('../pages/admin/AttemptReview.vue'), meta: { auth: true, admin: true } },

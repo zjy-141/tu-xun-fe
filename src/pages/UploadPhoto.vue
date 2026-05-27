@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { photosApi } from '../api/photos'
 import { extractApiError } from '../api/client'
+import { showToast } from '../composables/toast'
 import ImageUpload from '../components/ImageUpload.vue'
 
 const router = useRouter()
@@ -29,7 +30,10 @@ async function handleSubmit() {
     })
     if (res.data.success) {
       const d = res.data.data as unknown as { id: number; message: string }
-      router.push(`/photos/${d.id}`)
+      showToast('success', d.message || '投稿已提交，等待审核')
+      setTimeout(() => router.replace(`/photos/${d.id}`), 800)
+    } else {
+      error.value = '上传失败，请重试'
     }
   } catch (err: unknown) {
     const apiErr = extractApiError(err)
