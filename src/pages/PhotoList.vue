@@ -26,8 +26,9 @@ async function fetchPhotos() {
     else if (solvedFilter.value === 'false') params.solved = false
     const res = await photosApi.list(params)
     if (res.data.success) {
-      photos.value = res.data.data.items
-      total.value = res.data.data.total
+      const d = res.data.data as unknown as { total: number; photos: PhotoListItem[] }
+      photos.value = d.photos
+      total.value = d.total
     }
   } catch { /* ignore */ }
   finally { loading.value = false }

@@ -16,10 +16,15 @@ const emit = defineEmits<{
   (e: 'select', file: File): void
 }>()
 
-const inputRef = ref<HTMLInputElement>()
+const inputRef = ref<HTMLInputElement | null>(null)
 const preview = ref<string | null>(null)
+const previewName = ref('')
 const error = ref('')
 const dragging = ref(false)
+
+function triggerInput() {
+  inputRef.value?.click()
+}
 
 function handleFile(file: File) {
   error.value = ''
@@ -32,12 +37,27 @@ function handleFile(file: File) {
     return
   }
   preview.value = URL.createObjectURL(file)
+  previewName.value = file.name
   emit('select', file)
+}
+
+function onInputChange(e: Event) {
+  const target = e.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (file) handleFile(file)
+}
+
+function onDrop(e: DragEvent) {
+  dragging.value = false
+  const file = e.dataTransfer?.files?.[0]
+  if (file) handleFile(file)
 }
 
 function clearPreview() {
   preview.value = null
+  previewName.value = ''
   if (inputRef.value) inputRef.value.value = ''
+  error.value = ''
 }
 </script>
 
@@ -46,13 +66,14 @@ function clearPreview() {
     <div
       class="relative border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors"
       :class="dragging ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40 hover:bg-bg'"
-      @click="inputRef?.click()"
+      @click="triggerInput"
       @dragover.prevent="dragging = true"
       @dragleave="dragging = false"
-      @drop.prevent="dragging = false; const f = $event.dataTransfer?.files?.[0]; if (f) handleFile(f)"
+      @drop.prevent="onDrop"
     >
-      <div v-if="preview" class="relative">
+      <div v-if="preview" class="relative" @click.stop>
         <img :src="preview" alt="预览" class="max-h-64 mx-auto rounded-lg object-contain" />
+        <p class="text-xs text-text-light mt-2">{{ previewName }}</p>
         <button
           type="button"
           class="absolute top-2 right-2 bg-black/50 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm hover:bg-black/70"
@@ -64,14 +85,14 @@ function clearPreview() {
         <p class="text-text font-medium">{{ label }}</p>
         <p v-if="hint" class="text-xs text-text-light mt-1">{{ hint }}</p>
       </div>
-      <input
-        ref="inputRef"
-        type="file"
-        :accept="accept"
-        class="hidden"
-        @change="const f = ($event.target as HTMLInputElement).files?.[0]; if (f) handleFile(f)"
-      />
     </div>
+    <input
+      ref="inputRef"
+      type="file"
+      :accept="accept"
+      class="hidden"
+      @change="onInputChange"
+    />
     <p v-if="error" class="text-accent text-sm mt-1">{{ error }}</p>
   </div>
 </template>

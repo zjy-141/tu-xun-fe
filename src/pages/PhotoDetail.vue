@@ -1,23 +1,39 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { photosApi } from '../api/photos'
-import { storiesApi } from '../api/stories'
+import { attemptsApi } from '../api/attempts'
+import { likesApi } from '../api/likes'
 import { useAuth } from '../composables/useAuth'
+import { showToast } from '../composables/toast'
+import { extractApiError } from '../api/client'
+import { formatDate, formatDateTime } from '../utils/format'
 import Loading from '../components/Loading.vue'
-import type { PhotoDetail, StoryItem } from '../types'
+import Empty from '../components/Empty.vue'
+import Pagination from '../components/Pagination.vue'
+import type { PhotoDetail, CommentForm, AttemptForm } from '../types'
 
 const route = useRoute()
+const router = useRouter()
 const { user } = useAuth()
 
 const photoId = computed(() => Number(route.params.id))
-
 const photo = ref<PhotoDetail | null>(null)
-const stories = ref<StoryItem[]>([])
-const storyText = ref('')
-const postingStory = ref(false)
+const liked = ref(false)
+const likeCount = ref(0)
 const loading = ref(true)
-const storyLoading = ref(false)
+
+const comments = ref<CommentForm[]>([])
+const commentsTotal = ref(0)
+const commentPage = ref(1)
+const commentText = ref('')
+const commentSubmitting = ref(false)
+const commentLoading = ref(false)
+
+const attempts = ref<AttemptForm[]>([])
+const attemptsTotal = ref(0)
+const attemptPage = ref(1)
+const attemptLoading = ref(false)
 
 async function fetchDetail() {
   loading.value = true
@@ -28,28 +44,82 @@ async function fetchDetail() {
   finally { loading.value = false }
 }
 
-async function fetchStories() {
-  storyLoading.value = true
+async function fetchLikeStatus() {
+  if (!user.value) return
   try {
-    const res = await storiesApi.listByPhoto(photoId.value)
-    if (res.data.success) stories.value = res.data.data.stories
+    const res = await likesApi.getPhotoLikeStatus(photoId.value)
+    if (res.data.success) {
+      liked.value = res.data.data.liked
+      likeCount.value = res.data.data.count
+    }
   } catch { /* ignore */ }
-  finally { storyLoading.value = false }
 }
 
-async function handlePostStory() {
-  if (!storyText.value.trim()) return
-  postingStory.value = true
+async function toggleLike() {
+  if (!user.value) { router.push('/login'); return }
   try {
-    await storiesApi.create(photoId.value, { content: storyText.value })
-    storyText.value = ''
-    const res = await storiesApi.listByPhoto(photoId.value)
-    if (res.data.success) stories.value = res.data.data.stories
-  } catch { /* ignore */ }
-  finally { postingStory.value = false }
+    const res = await likesApi.togglePhotoLike(photoId.value)
+    if (res.data.success) {
+      liked.value = res.data.data.liked
+      likeCount.value = res.data.data.count
+    }
+  } catch (err: unknown) {
+    const apiErr = extractApiError(err)
+    showToast('error', apiErr.message || '操作失败')
+  }
 }
 
-onMounted(() => { fetchDetail(); fetchStories() })
+async function fetchComments() {
+  commentLoading.value = true
+  try {
+    const res = await photosApi.comments(photoId.value, { page: commentPage.value, limit: 10 })
+    if (res.data.success) {
+      const d = res.data.data as unknown as { total: number; comments: CommentForm[] }
+      comments.value = d.comments
+      commentsTotal.value = d.total
+    }
+  } catch { /* ignore */ }
+  finally { commentLoading.value = false }
+}
+
+async function submitComment() {
+  if (!user.value) { router.push('/login'); return }
+  if (!commentText.value.trim()) return
+  commentSubmitting.value = true
+  try {
+    await commentsApi.create(photoId.value, { comment_text: commentText.value.trim() })
+    commentText.value = ''
+    showToast('success', '评论已提交，等待审核')
+    fetchComments()
+  } catch (err: unknown) {
+    const apiErr = extractApiError(err)
+    showToast('error', apiErr.message || '评论失败')
+  } finally {
+    commentSubmitting.value = false
+  }
+}
+
+async function fetchAttempts() {
+  attemptLoading.value = true
+  try {
+    const res = await photosApi.attempts(photoId.value, { page: attemptPage.value, limit: 10 })
+    if (res.data.success) {
+      const d = res.data.data as unknown as { total: number; attempts: AttemptForm[] }
+      attempts.value = d.attempts
+      attemptsTotal.value = d.total
+    }
+  } catch { /* ignore */ }
+  finally { attemptLoading.value = false }
+}
+
+async function init() {
+  await fetchDetail()
+  await fetchLikeStatus()
+  fetchComments()
+  fetchAttempts()
+}
+
+init()
 </script>
 
 <template>
@@ -67,7 +137,7 @@ onMounted(() => { fetchDetail(); fetchStories() })
             <div>
               <h1 class="text-xl font-bold text-text">{{ photo.title }}</h1>
               <p class="text-sm text-text-light mt-1">
-                作者：{{ photo.author.name }} · 发布于 {{ new Date(photo.created_at).toLocaleDateString('zh-CN') }}
+                作者：<router-link v-if="photo.author" :to="`/users/${photo.author.id}`" class="text-primary hover:underline">{{ photo.author.name }}</router-link><span v-else>未知</span> · 发布于 {{ formatDate(photo.created_at) }}
               </p>
             </div>
             <div class="flex items-center gap-2">
@@ -79,7 +149,7 @@ onMounted(() => { fetchDetail(); fetchStories() })
           <p v-if="photo.description" class="mt-4 text-text leading-relaxed">{{ photo.description }}</p>
 
           <div v-if="photo.winner" class="mt-4 p-3 bg-primary/5 rounded-lg text-sm">
-            🏆 <span class="font-medium">{{ photo.winner.name }}</span> 已破解此机位！
+            🏆 <span class="font-medium">{{ photo.winner.user.name }}</span> 已破解此机位！
           </div>
 
           <div v-if="photo.current_user_attempt" class="mt-4 p-3 bg-bg rounded-lg text-sm">
@@ -89,51 +159,82 @@ onMounted(() => { fetchDetail(); fetchStories() })
             <span v-else class="text-accent">❌ 你的答案未通过审核</span>
           </div>
 
-          <div class="flex gap-3 mt-6">
+          <div class="flex items-center gap-3 mt-6">
+            <button @click="toggleLike" :class="['flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors', liked ? 'bg-red-50 text-red-500 border border-red-200' : 'bg-bg border border-border text-text-light hover:text-red-400']">
+              {{ liked ? '❤️' : '🤍' }} {{ likeCount }}
+            </button>
             <router-link
-              v-if="user && photo.author.id !== user.id && !photo.current_user_attempt"
+              v-if="user && !photo.current_user_attempt"
               :to="`/photos/${photo.id}/submit`"
-              class="px-5 py-2.5 rounded-lg bg-primary text-white font-medium hover:bg-primary-light transition-colors"
+              class="px-5 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary-light transition-colors"
             >我要答题</router-link>
             <router-link
-              v-if="user && user.id === photo.author.id"
+              v-if="user && photo.current_user_attempt"
               :to="`/photos/${photo.id}/my-attempts`"
-              class="px-5 py-2.5 rounded-lg border border-border text-text font-medium hover:bg-bg transition-colors"
+              class="px-5 py-2 rounded-lg border border-border text-text font-medium hover:bg-bg transition-colors"
             >查看答题记录</router-link>
           </div>
         </div>
       </div>
 
-      <!-- 故事区域 -->
+      <!-- 已通过的答题 -->
       <div class="mt-8 bg-card rounded-xl border border-border p-6">
-        <h2 class="text-lg font-bold text-text mb-4">📖 发现故事 ({{ stories.length }})</h2>
+        <h2 class="text-lg font-bold text-text mb-4">📝 答题记录 ({{ attemptsTotal }})</h2>
+        <Loading v-if="attemptLoading" text="加载中..." />
+        <Empty v-else-if="attempts.length === 0" icon="🔍" title="暂无答题" description="成为第一个答题者吧！" />
+        <div v-else class="space-y-4">
+          <div v-for="a in attempts" :key="a.id" class="flex gap-4 p-4 bg-bg rounded-lg">
+            <img :src="a.image_url" alt="答题照片" class="w-24 h-24 rounded-lg object-cover shrink-0" />
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <router-link v-if="a.user" :to="`/users/${a.user.id}`" class="text-sm font-medium text-primary hover:underline">{{ a.user.name }}</router-link><span v-else class="text-sm font-medium text-text">{{ a.user?.name || '未知' }}</span>
+                <span class="text-xs text-text-light">{{ formatDate(a.created_at) }}</span>
+              </div>
+              <p class="text-sm text-text">猜测地点：{{ a.guessed_location }}</p>
+              <span class="text-xs text-text-light">❤️ {{ a.likes_count }}</span>
+            </div>
+          </div>
+          <Pagination v-if="attemptsTotal > 10" :page="attemptPage" :total="attemptsTotal" :limit="10" @change="(p: number) => { attemptPage = p; fetchAttempts() }" />
+        </div>
+      </div>
+
+      <!-- 评论 -->
+      <div class="mt-8 bg-card rounded-xl border border-border p-6">
+        <h2 class="text-lg font-bold text-text mb-4">💬 评论 ({{ commentsTotal }})</h2>
 
         <div v-if="user" class="flex gap-2 mb-6">
           <input
-            v-model="storyText"
+            v-model="commentText"
             type="text"
-            placeholder="分享你发现这个角落的故事..."
+            placeholder="发表评论..."
             class="flex-1 px-3 py-2.5 rounded-lg border border-border bg-bg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors text-sm"
+            @keyup.enter="submitComment"
           />
           <button
-            @click="handlePostStory"
-            :disabled="postingStory || !storyText.trim()"
+            @click="submitComment"
+            :disabled="commentSubmitting || !commentText.trim()"
             class="px-4 py-2.5 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary-light disabled:opacity-50 transition-colors shrink-0"
-          >{{ postingStory ? '发布中...' : '发布' }}</button>
+          >{{ commentSubmitting ? '发布中...' : '发布' }}</button>
         </div>
+        <p v-else class="text-sm text-text-light mb-6">
+          <router-link to="/login" class="text-primary hover:underline">登录</router-link> 后可以发表评论
+        </p>
 
-        <Loading v-if="storyLoading" text="加载故事中..." />
-        <p v-else-if="stories.length === 0" class="text-sm text-text-light text-center py-6">还没有故事，来分享第一个吧 ✨</p>
+        <Loading v-if="commentLoading" text="加载中..." />
+        <Empty v-else-if="comments.length === 0" icon="💬" title="暂无评论" description="来说点什么吧" />
         <div v-else class="space-y-4">
-          <div v-for="story in stories" :key="story.id" class="p-4 bg-bg rounded-lg">
+          <div v-for="c in comments" :key="c.id" class="p-4 bg-bg rounded-lg">
             <div class="flex items-center gap-2 mb-2">
-              <span class="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold">{{ story.user_name.charAt(0) }}</span>
-              <span class="text-sm font-medium text-text">{{ story.user_name }}</span>
-              <span class="text-xs text-text-light">{{ new Date(story.created_at).toLocaleDateString('zh-CN') }}</span>
+              <router-link v-if="c.user" :to="`/users/${c.user.id}`" class="flex items-center gap-2 hover:underline">
+                <span class="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold">{{ c.user.name.charAt(0) }}</span>
+                <span class="text-sm font-medium text-text">{{ c.user.name }}</span>
+              </router-link>
+              <span v-else class="text-sm font-medium text-text">{{ c.user?.name || '未知' }}</span>
+              <span class="text-xs text-text-light">{{ formatDate(c.created_at) }}</span>
             </div>
-            <p class="text-sm text-text leading-relaxed">{{ story.content }}</p>
-            <img v-if="story.media_url" :src="story.media_url" alt="故事配图" class="mt-2 rounded-lg max-h-48 object-cover" />
+            <p class="text-sm text-text leading-relaxed">{{ c.content }}</p>
           </div>
+          <Pagination v-if="commentsTotal > 10" :page="commentPage" :total="commentsTotal" :limit="10" @change="(p: number) => { commentPage = p; fetchComments() }" />
         </div>
       </div>
     </template>

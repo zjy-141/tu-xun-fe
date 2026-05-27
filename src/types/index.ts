@@ -1,8 +1,3 @@
-// ============================================================
-// 通用类型
-// ============================================================
-
-/** 后端统一响应包装 */
 export interface ApiResponse<T = unknown> {
   success: boolean
   data: T
@@ -10,88 +5,83 @@ export interface ApiResponse<T = unknown> {
   code?: number
 }
 
-/** 分页数据（Photos 列表返回 page/limit；Admin 列表仅返回 total/items） */
-export interface PaginatedData<T> {
-  total: number
-  page?: number
-  limit?: number
-  items: T[]
-}
-
-/** 分页查询参数 */
 export interface PagerParams {
   page?: number
   limit?: number
 }
 
-// ============================================================
-// 用户相关 (对应 model.User，注意 BaseModel 的 create/update/delete 均为 json:"-")
-// ============================================================
+export interface PaginatedData<T> {
+  total: number
+  items: T[]
+}
 
 export interface User {
   id: number
   student_id: string
   name: string
+  avatar_url: string
   email: string
-  level: number          // 0=普通用户, >=1=管理员
-  prize_count: number
+  phone: string
+  level: number
+  qq: string
+  weixin: string
+  prize_count?: number
+  description?: string
+  photo_count?: number
+  attempt_count?: number
 }
 
 export interface UserBrief {
   id: number
   name: string
+  avatar_url: string
 }
 
-/** POST /api/auth/register 请求体 */
 export interface RegisterParams {
   student_id: string
   name: string
   password: string
-  email: string
+  phone: string
+  email?: string
+  qq?: string
+  weixin?: string
 }
 
-/** POST /api/auth/login 请求体 */
 export interface LoginParams {
   student_id: string
   password: string
 }
 
-// ============================================================
-// 图片相关 (对应 model.Photo)
-// ============================================================
-
 export type PhotoStatus = 'pending' | 'approved' | 'rejected'
 
-/** GET /api/photos 列表项 */
 export interface PhotoListItem {
   id: number
   title: string
   description: string
-  image_url: string        // 列表中使用缩略图 thumb_url
+  thumb_url: string
   author: UserBrief
   solved: boolean
-  attempts_count: number
   created_at: string
+  attempts_count: number
+  likes_count: number
 }
 
-/** GET /api/photos/:id 详情 */
+export interface PhotoListResponse {
+  total: number
+  photos: PhotoListItem[]
+}
+
 export interface PhotoDetail {
   id: number
   title: string
   description: string
-  image_url: string        // 原图
+  image_url: string
   author: UserBrief
   solved: boolean
   attempts_count: number
   created_at: string
-  winner?: PhotoWinner
+  winner?: AttemptForm
   current_user_attempt?: CurrentUserAttempt
-}
-
-export interface PhotoWinner {
-  user_id: number
-  name: string
-  created_at: string
 }
 
 export interface CurrentUserAttempt {
@@ -100,7 +90,6 @@ export interface CurrentUserAttempt {
   is_winner: boolean
 }
 
-/** POST /api/photos 上传表单 */
 export interface UploadPhotoForm {
   image: File
   title: string
@@ -108,33 +97,33 @@ export interface UploadPhotoForm {
   location_secret: string
 }
 
-/** POST /api/photos 上传成功响应 (model.Photo 的 JSON 序列化结果) */
 export interface UploadedPhoto {
   id: number
-  user_id: number
-  title: string
-  description: string
-  image_url: string
-  thumb_url: string
-  status: PhotoStatus
-  solved: boolean
-  attempts_count: number
-  author?: User
+  message: string
 }
-
-// ============================================================
-// 答题相关 (对应 model.Attempt)
-// ============================================================
 
 export type AttemptStatus = 'pending' | 'approved' | 'rejected'
 
-/** POST /api/photos/:id/attempts 提交表单 (multipart/form-data) */
+export interface AttemptForm {
+  id: number
+  image_url: string
+  comment?: string
+  guessed_location: string
+  likes_count: number
+  created_at: string
+  user: UserBrief
+}
+
+export interface AttemptListResponse {
+  total: number
+  attempts: AttemptForm[]
+}
+
 export interface SubmitAttemptForm {
   image: File
   guessed_location: string
 }
 
-/** POST /api/photos/:id/attempts 响应 */
 export interface SubmitAttemptResponse {
   attempt_id: number
   photo_id: number
@@ -142,7 +131,6 @@ export interface SubmitAttemptResponse {
   message: string
 }
 
-/** GET /api/photos/:id/my-attempts 单项 */
 export interface MyAttempt {
   id: number
   image_url: string
@@ -152,16 +140,29 @@ export interface MyAttempt {
   reviewed_at: string | null
 }
 
-/** GET /api/photos/:id/my-attempts 响应 data */
 export interface MyAttemptsData {
   photo_id: number
   solved: boolean
   my_attempts: MyAttempt[]
 }
 
-// ============================================================
-// 审核相关 (Admin)
-// ============================================================
+export interface CommentForm {
+  id: number
+  content: string
+  likes_count: number
+  created_at: string
+  user: UserBrief
+}
+
+export interface CommentListResponse {
+  total: number
+  comments: CommentForm[]
+}
+
+export interface CreateCommentResponse {
+  id: number
+  message: string
+}
 
 export type ReviewAction = 'approve' | 'reject'
 
@@ -170,34 +171,46 @@ export interface ReviewForm {
   reject_reason?: string
 }
 
-/** GET /api/admin/photos/pending 列表项 */
 export interface PendingPhoto {
   id: number
   title: string
+  description: string
   location_secret: string
+  thumb_url: string
   author: UserBrief
   created_at: string
 }
 
-/** PUT /api/admin/photos/:id/review 响应 */
+export interface PendingPhotosResponse {
+  total: number
+  photos: PendingPhoto[]
+}
+
 export interface ReviewPhotoResponse {
   id: number
   status: PhotoStatus
   message: string
 }
 
-/** GET /api/admin/attempts/pending 列表项 */
 export interface PendingAttempt {
   attempt_id: number
   photo_id: number
   photo_title: string
-  user: UserBrief
+  user?: UserBrief
+  user_id?: number
+  user_name?: string
   image_url: string
   guessed_location: string
+  thumb_url: string
+  location_secret: string
   submitted_at: string
 }
 
-/** PUT /api/admin/attempts/:id/review 响应 */
+export interface PendingAttemptsResponse {
+  total: number
+  items: PendingAttempt[]
+}
+
 export interface ReviewAttemptResponse {
   attempt_id: number
   status: AttemptStatus
@@ -206,15 +219,10 @@ export interface ReviewAttemptResponse {
   message: string
 }
 
-/** PUT /api/admin/prizes/:id/claim 响应 */
 export interface ClaimPrizeResponse {
   prize_id: number
   status: string
 }
-
-// ============================================================
-// 奖品相关 (对应 model.Prize)
-// ============================================================
 
 export type PrizeStatus = 'unclaimed' | 'claimed'
 
@@ -227,16 +235,137 @@ export interface PrizeItem {
   awarded_at: string
 }
 
-/** GET /api/users/me/prizes 响应 data */
 export interface MyPrizesData {
+  total: number
   prizes: PrizeItem[]
 }
 
-// ============================================================
-// 故事相关 (对应 model.Story)
-// ============================================================
+export interface ToggleLikeResponse {
+  liked: boolean
+  count: number
+}
 
-/** GET /api/photos/:id/stories 列表项 */
+export interface LikeStatusResponse {
+  liked: boolean
+  count: number
+}
+
+export interface MessageItem {
+  id: number
+  type: string
+  title: string
+  content: string
+  related_id: number
+  related_type: string
+  is_read: boolean
+  created_at: string
+}
+
+export interface MessagesResponse {
+  total: number
+  messages: MessageItem[]
+}
+
+export interface UnreadCountResponse {
+  count: number
+}
+
+export interface ConversationItem {
+  partner_id: number
+  partner_name: string
+  partner_avatar: string
+  last_content: string
+  last_time: string
+  unread_count: number
+}
+
+export interface ConversationDetailResponse {
+  partner: UserBrief
+  messages: ChatMessage[]
+  total: number
+}
+
+export interface ChatMessage {
+  id: number
+  sender_id: number
+  content: string
+  is_mine: boolean
+  type: string
+  created_at: string
+}
+
+export interface PendingCommentItem {
+  comment_id: number
+  photo_id: number
+  photo_title: string
+  user: UserBrief
+  comment: string
+  created_at: string
+}
+
+export interface PendingCommentsResponse {
+  total: number
+  items: PendingCommentItem[]
+}
+
+export interface ReviewCommentResponse {
+  comment_id: number
+  status: string
+  message: string
+}
+
+export interface UpdateAdminLevelResponse {
+  user_id: number
+  name: string
+  old_level: number
+  new_level: number
+  message: string
+}
+
+export interface UserProfileResponse {
+  id: number
+  name: string
+  avatar_url: string
+  level: number
+  description: string
+  prize_count: number
+  photo_count: number
+  attempt_count: number
+}
+
+export interface ChangePasswordParams {
+  old_password: string
+  new_password: string
+}
+
+export interface UpdateProfileParams {
+  name?: string
+  phone?: string
+  email?: string
+  qq?: string
+  weixin?: string
+}
+
+export interface PendingPhotoForm {
+  id: number
+  title: string
+  description: string
+  location_secret: string
+  thumb_url: string
+  author: UserBrief
+  created_at: string
+}
+
+export interface CommentLikeResponse {
+  liked: boolean
+  count: number
+}
+
+export interface AttemptLikeResponse {
+  liked: boolean
+  count: number
+}
+
 export interface StoryItem {
   id: number
   user_name: string
@@ -246,18 +375,15 @@ export interface StoryItem {
   created_at: string
 }
 
-/** GET /api/photos/:id/stories 响应 data */
 export interface StoriesData {
   stories: StoryItem[]
 }
 
-/** POST /api/photos/:id/stories 请求体 */
 export interface CreateStoryForm {
   content: string
   media_url?: string
 }
 
-/** POST /api/photos/:id/stories 响应 (model.Story 的 JSON) */
 export interface StoryCreated {
   id: number
   photo_id: number
@@ -268,7 +394,6 @@ export interface StoryCreated {
   user?: User
 }
 
-/** POST /api/stories/media 响应 */
 export interface StoryMediaResponse {
   media_url: string
 }

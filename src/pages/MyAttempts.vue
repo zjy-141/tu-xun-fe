@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { attemptsApi } from '../api/attempts'
+import { formatDateTime } from '../utils/format'
 import Loading from '../components/Loading.vue'
 import Empty from '../components/Empty.vue'
 import type { MyAttemptsData } from '../types'
@@ -47,7 +48,7 @@ onMounted(async () => {
               <span v-if="attempt.is_winner" class="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">🏆 获奖</span>
             </div>
             <p class="text-sm text-text">猜测地点：{{ attempt.guessed_location }}</p>
-            <p v-if="attempt.reviewed_at" class="text-xs text-text-light mt-1">审核时间：{{ new Date(attempt.reviewed_at).toLocaleString('zh-CN') }}</p>
+            <p v-if="attempt.reviewed_at" class="text-xs text-text-light mt-1">审核时间：{{ formatDateTime(attempt.reviewed_at) }}</p>
           </div>
         </div>
       </div>

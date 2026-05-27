@@ -27,7 +27,10 @@ async function handleSubmit() {
       description: description.value.trim() || undefined,
       location_secret: locationSecret.value.trim(),
     })
-    if (res.data.success) router.push(`/photos/${res.data.data.id}`)
+    if (res.data.success) {
+      const d = res.data.data as unknown as { id: number; message: string }
+      router.push(`/photos/${d.id}`)
+    }
   } catch (err: unknown) {
     const apiErr = extractApiError(err)
     error.value = apiErr.message || '上传失败'

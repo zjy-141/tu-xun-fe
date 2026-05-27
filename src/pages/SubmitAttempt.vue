@@ -25,7 +25,8 @@ async function handleSubmit() {
       guessed_location: guessedLocation.value.trim(),
     })
     if (res.data.success) {
-      alert(res.data.data.message)
+      const d = res.data.data as unknown as { message: string }
+      alert(d.message || '提交成功')
       router.push(`/photos/${photoId}`)
     }
   } catch (err: unknown) {

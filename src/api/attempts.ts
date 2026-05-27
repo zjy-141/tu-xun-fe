@@ -4,10 +4,10 @@ import type {
   SubmitAttemptForm,
   SubmitAttemptResponse,
   MyAttemptsData,
+  AttemptListResponse,
 } from '../types'
 
 export const attemptsApi = {
-  /** POST /api/photos/:id/attempts — 提交答题 (multipart/form-data) */
   submit: (photoId: number, data: SubmitAttemptForm) => {
     const formData = new FormData()
     formData.append('image', data.image)
@@ -15,11 +15,12 @@ export const attemptsApi = {
     return client.post<ApiResponse<SubmitAttemptResponse>>(
       `/photos/${photoId}/attempts`,
       formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } },
     )
   },
 
-  /** GET /api/photos/:id/my-attempts — 获取我对某图片的答题记录 */
   myAttempts: (photoId: number) =>
     client.get<ApiResponse<MyAttemptsData>>(`/photos/${photoId}/my-attempts`),
+
+  userAttempts: (userId: number, params?: { page?: number; limit?: number; sort_by?: string }) =>
+    client.get<ApiResponse<AttemptListResponse>>(`/users/${userId}/attempts`, { params }),
 }

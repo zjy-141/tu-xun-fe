@@ -14,16 +14,17 @@ const router = createRouter({
     { path: '/photos/:id/my-attempts', component: () => import('../pages/MyAttempts.vue'), meta: { auth: true }, props: true },
     { path: '/prizes', component: () => import('../pages/MyPrizes.vue'), meta: { auth: true } },
     { path: '/profile', component: () => import('../pages/Profile.vue'), meta: { auth: true } },
+    { path: '/messages', component: () => import('../pages/Messages.vue'), meta: { auth: true } },
     { path: '/admin/photos', component: () => import('../pages/admin/PhotoReview.vue'), meta: { auth: true, admin: true } },
     { path: '/admin/attempts', component: () => import('../pages/admin/AttemptReview.vue'), meta: { auth: true, admin: true } },
     { path: '/admin/prizes', component: () => import('../pages/admin/PrizeClaim.vue'), meta: { auth: true, admin: true } },
+    { path: '/admin/comments', component: () => import('../pages/admin/CommentReview.vue'), meta: { auth: true, admin: true } },
   ],
 })
 
 router.beforeEach((to, _from) => {
   const { user, loading, isAdmin } = useAuth()
 
-  // 等 loading 完成
   if (loading.value) return true
 
   if (to.meta.auth && !user.value) {

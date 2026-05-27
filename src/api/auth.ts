@@ -2,19 +2,33 @@ import client from './client'
 import type { ApiResponse, User, RegisterParams, LoginParams } from '../types'
 
 export const authApi = {
-  /** POST /api/auth/register */
   register: (data: RegisterParams) =>
     client.post<ApiResponse<User>>('/auth/register', data),
 
-  /** POST /api/auth/login */
   login: (data: LoginParams) =>
     client.post<ApiResponse<User>>('/auth/login', data),
 
-  /** DELETE /api/auth/logout */
   logout: () =>
     client.delete<ApiResponse<null>>('/auth/logout'),
 
-  /** GET /api/auth/me */
   me: () =>
     client.get<ApiResponse<User>>('/auth/me'),
+
+  changePassword: (data: { old_password: string; new_password: string }) =>
+    client.put<ApiResponse<null>>('/auth/password', data),
+
+  updateProfile: (data: Record<string, string>) =>
+    client.put<ApiResponse<User>>('/auth/profile', data),
+
+  updateDescription: (data: { description: string }) =>
+    client.put<ApiResponse<string>>('/auth/description', data),
+
+  uploadAvatar: (file: File) => {
+    const formData = new FormData()
+    formData.append('avatar', file)
+    return client.post<ApiResponse<{ avatar_url: string }>>('/auth/avatar', formData)
+  },
+
+  getUserProfile: (userId: number) =>
+    client.get<ApiResponse<import('../types').UserProfileResponse>>(`/users/${userId}`),
 }

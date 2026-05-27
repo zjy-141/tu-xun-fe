@@ -11,7 +11,7 @@ defineProps<{ photo: PhotoListItem }>()
   >
     <div class="aspect-[4/3] overflow-hidden bg-gray-100 relative">
       <img
-        :src="photo.image_url"
+        :src="photo.thumb_url"
         :alt="photo.title"
         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         loading="lazy"
@@ -29,7 +29,10 @@ defineProps<{ photo: PhotoListItem }>()
       </p>
       <div class="flex items-center justify-between mt-3 text-xs text-text-light">
         <span>{{ photo.author.name }}</span>
-        <span>{{ photo.attempts_count }} 次尝试</span>
+        <div class="flex items-center gap-3">
+          <span>❤️ {{ photo.likes_count }}</span>
+          <span>{{ photo.attempts_count }} 次尝试</span>
+        </div>
       </div>
     </div>
   </router-link>

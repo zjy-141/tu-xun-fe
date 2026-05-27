@@ -31,13 +31,9 @@ async function handleSubmit(): Promise<void> {
 
   submitting.value = true
   try {
-    const res = await login(form.value)
-    if (res.success) {
-      // Session 认证模式：将用户信息暂存 localStorage（仅 UI 展示用，非安全凭证）
-      localStorage.setItem('user', JSON.stringify(res.data))
-      showToast('success', '登录成功，欢迎回来！')
-      router.push('/')
-    }
+    await login(form.value)
+    showToast('success', '登录成功，欢迎回来！')
+    router.push('/')
   } catch (err: unknown) {
     const apiErr = extractApiError(err)
     showToast('error', apiErr.message || '服务器异常，请稍后重试')

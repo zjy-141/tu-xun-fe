@@ -8,16 +8,20 @@ import { extractApiError } from '../api/client'
 const { register } = useAuth()
 const router = useRouter()
 
-const form = ref({ student_id: '', name: '', password: '', email: '' })
+const form = ref({ student_id: '', name: '', password: '', phone: '', email: '', qq: '', weixin: '' })
 const submitting = ref(false)
 
 async function handleSubmit() {
-  if (!form.value.student_id || !form.value.name || !form.value.password || !form.value.email) {
+  if (!form.value.student_id || !form.value.name || !form.value.password || !form.value.phone) {
     showToast('error', '请填写所有必填字段')
     return
   }
   if (form.value.password.length < 6 || form.value.password.length > 20) {
     showToast('error', '密码长度需在 6-20 位之间')
+    return
+  }
+  if (!/^[a-zA-Z0-9]+$/.test(form.value.password)) {
+    showToast('error', '密码只能包含字母和数字')
     return
   }
   submitting.value = true
@@ -47,12 +51,24 @@ async function handleSubmit() {
         <input v-model="form.name" type="text" class="w-full px-3 py-2.5 rounded-lg border border-border bg-bg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" placeholder="给自己取个名字" />
       </div>
       <div>
+        <label class="block text-sm font-medium text-text mb-1">手机号 <span class="text-accent">*</span></label>
+        <input v-model="form.phone" type="tel" class="w-full px-3 py-2.5 rounded-lg border border-border bg-bg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" placeholder="请输入手机号" />
+      </div>
+      <div>
         <label class="block text-sm font-medium text-text mb-1">校园邮箱</label>
         <input v-model="form.email" type="email" class="w-full px-3 py-2.5 rounded-lg border border-border bg-bg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" placeholder="example@stu.xjtu.edu.cn" />
       </div>
       <div>
+        <label class="block text-sm font-medium text-text mb-1">QQ</label>
+        <input v-model="form.qq" type="text" class="w-full px-3 py-2.5 rounded-lg border border-border bg-bg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" placeholder="选填" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-text mb-1">微信</label>
+        <input v-model="form.weixin" type="text" class="w-full px-3 py-2.5 rounded-lg border border-border bg-bg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" placeholder="选填" />
+      </div>
+      <div>
         <label class="block text-sm font-medium text-text mb-1">密码</label>
-        <input v-model="form.password" type="password" class="w-full px-3 py-2.5 rounded-lg border border-border bg-bg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" placeholder="6-20 位密码" />
+        <input v-model="form.password" type="password" class="w-full px-3 py-2.5 rounded-lg border border-border bg-bg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" placeholder="6-20 位，仅限字母和数字" />
       </div>
       <button type="submit" :disabled="submitting" class="w-full py-2.5 rounded-lg bg-primary text-white font-medium hover:bg-primary-light disabled:opacity-50 transition-colors">
         {{ submitting ? '注册中...' : '注册' }}

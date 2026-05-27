@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { prizesApi } from '../api/prizes'
 import Loading from '../components/Loading.vue'
 import Empty from '../components/Empty.vue'
-import type { PrizeItem } from '../types'
+import { formatDate } from '../utils/format'
 
 const prizes = ref<PrizeItem[]>([])
 const loading = ref(true)
@@ -12,7 +12,10 @@ onMounted(async () => {
   loading.value = true
   try {
     const res = await prizesApi.getMyPrizes()
-    if (res.data.success) prizes.value = res.data.data.prizes
+    if (res.data.success) {
+      const d = res.data.data as unknown as { total: number; prizes: PrizeItem[] }
+      prizes.value = d.prizes
+    }
   } catch { /* ignore */ }
   finally { loading.value = false }
 })
@@ -30,7 +33,7 @@ onMounted(async () => {
         <div class="flex-1">
           <h3 class="font-semibold text-text">{{ prize.prize_type }}</h3>
           <p class="text-sm text-text-light">来源：{{ prize.photo_title }}</p>
-          <p class="text-xs text-text-light mt-1">获得时间：{{ new Date(prize.awarded_at).toLocaleDateString('zh-CN') }}</p>
+          <p class="text-xs text-text-light mt-1">获得时间：{{ formatDate(prize.awarded_at) }}</p>
         </div>
         <span :class="['px-3 py-1 rounded-full text-xs font-medium shrink-0', prize.status === 'claimed' ? 'bg-gray-100 text-gray-600' : 'bg-green-100 text-green-700']">
           {{ prize.status === 'claimed' ? '已领取' : '待领取' }}

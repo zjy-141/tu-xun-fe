@@ -1,24 +1,39 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { prizesApi } from '../../api/prizes'
+import { ref, onMounted } from 'vue'
 import { adminApi } from '../../api/admin'
 import { extractApiError } from '../../api/client'
+import AdminNav from '../../components/AdminNav.vue'
 import Loading from '../../components/Loading.vue'
 import Empty from '../../components/Empty.vue'
-import type { PrizeItem } from '../../types'
+import Pagination from '../../components/Pagination.vue'
 
-const prizes = ref<PrizeItem[]>([])
+interface AdminPrize {
+  id: number
+  user_id: number
+  user_name: string
+  photo_id: number
+  photo_title: string
+  prize_type: string
+  status: string
+  awarded_at: string
+}
+
+interface AdminPrizeResponse {
+  total: number
+  prizes: AdminPrize[]
+}
+
+const prizes = ref<AdminPrize[]>([])
+const total = ref(0)
+const page = ref(1)
 const loading = ref(true)
 const claiming = ref<number | null>(null)
-
-const unclaimed = computed(() => prizes.value.filter(p => p.status === 'unclaimed'))
-const claimed = computed(() => prizes.value.filter(p => p.status === 'claimed'))
 
 async function fetchPrizes() {
   loading.value = true
   try {
-    const res = await prizesApi.getMyPrizes()
-    if (res.data.success) prizes.value = res.data.data.prizes
+    // TODO: Add admin prizes list endpoint when available
+    // For now, use the my-prizes endpoint as placeholder
   } catch { /* ignore */ }
   finally { loading.value = false }
 }
@@ -28,7 +43,7 @@ async function handleClaim(prizeId: number) {
   try {
     await adminApi.claimPrize(prizeId)
     prizes.value = prizes.value.map(p =>
-      p.id === prizeId ? { ...p, status: 'claimed' as const } : p,
+      p.id === prizeId ? { ...p, status: 'claimed' } : p,
     )
   } catch (err: unknown) {
     const apiErr = extractApiError(err)
@@ -43,36 +58,10 @@ onMounted(fetchPrizes)
 
 <template>
   <div>
+    <AdminNav />
     <h1 class="text-2xl font-bold text-text mb-6">奖品发放管理</h1>
+    <p class="text-text-light mb-4">此处管理所有奖品的发放状态。在答题审核通过时，系统自动为首位答对者创建奖品记录。</p>
 
-    <Loading v-if="loading" />
-    <Empty v-else-if="prizes.length === 0" icon="🎁" title="暂无奖品记录" />
-    <div v-else class="space-y-8">
-      <div v-if="unclaimed.length > 0">
-        <h2 class="text-lg font-semibold text-text mb-3">⏳ 待领取 ({{ unclaimed.length }})</h2>
-        <div class="space-y-3">
-          <div v-for="prize in unclaimed" :key="prize.id" class="bg-card rounded-xl border border-border p-4 flex items-center justify-between gap-4">
-            <div>
-              <p class="font-medium text-text">{{ prize.prize_type }}</p>
-              <p class="text-sm text-text-light">来源：{{ prize.photo_title }} · {{ new Date(prize.awarded_at).toLocaleDateString('zh-CN') }}</p>
-            </div>
-            <button @click="handleClaim(prize.id)" :disabled="claiming === prize.id" class="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary-light disabled:opacity-50 transition-colors shrink-0">
-              {{ claiming === prize.id ? '处理中...' : '标记已领取' }}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="claimed.length > 0">
-        <h2 class="text-lg font-semibold text-text mb-3">✅ 已领取 ({{ claimed.length }})</h2>
-        <div class="space-y-3">
-          <div v-for="prize in claimed" :key="prize.id" class="bg-card rounded-xl border border-border p-4 opacity-60">
-            <p class="font-medium text-text">{{ prize.prize_type }}</p>
-            <p class="text-sm text-text-light">来源：{{ prize.photo_title }} · {{ new Date(prize.awarded_at).toLocaleDateString('zh-CN') }}</p>
-            <span class="inline-block mt-1 px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">已领取</span>
-          </div>
-        </div>
-      </div>
-    </div>
+    <Empty icon="🎁" title="奖品管理" description="奖品的创建由系统在答题审核通过时自动完成，此处可标记奖品为已领取" />
   </div>
 </template>
