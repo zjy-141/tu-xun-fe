@@ -45,9 +45,9 @@ const loading = ref(true)
 const reviewing = ref<number | null>(null)
 const rejectId = ref<number | null>(null)
 const rejectReason = ref('')
-const markSolved = ref(false)
+const solvedMarkSet = ref<Set<number>>(new Set())
 const statusFilter = ref('pending')
-const result = ref<{ message: string; is_winner: boolean } | null>(null)
+const result = ref<{ message: string; solved: number; photo_solved: boolean } | null>(null)
 
 async function fetchAttempts() {
   loading.value = true
@@ -76,19 +76,20 @@ async function handleReview(attemptId: number, action: 'approve' | 'reject') {
   reviewing.value = attemptId
   result.value = null
   try {
+    const marked = solvedMarkSet.value.has(attemptId)
     const res = await adminApi.reviewAttempt(attemptId, {
       action,
       reject_reason: action === 'reject' ? rejectReason.value : undefined,
-      solved: action === 'approve' && isSuperAdmin.value && markSolved.value ? 'solved' : undefined,
+      solved: action === 'approve' && isSuperAdmin.value && marked ? 'solved' : undefined,
     })
     if (res.data.success) {
-      const r = res.data.data as unknown as { message: string; is_winner: boolean }
+      const r = res.data.data as unknown as { message: string; solved: number; photo_solved: boolean }
       result.value = r
       attempts.value = attempts.value.filter(a => a.attempt_id !== attemptId)
       total.value--
       rejectId.value = null
       rejectReason.value = ''
-      markSolved.value = false
+      solvedMarkSet.value.delete(attemptId)
     }
   } catch (err: unknown) {
     const apiErr = extractApiError(err)
@@ -100,7 +101,14 @@ async function handleReview(attemptId: number, action: 'approve' | 'reject') {
 
 function startReview(attemptId: number) {
   rejectId.value = attemptId
-  markSolved.value = false
+  solvedMarkSet.value.delete(attemptId)
+}
+
+function toggleMark(attemptId: number) {
+  const s = new Set(solvedMarkSet.value)
+  if (s.has(attemptId)) s.delete(attemptId)
+  else s.add(attemptId)
+  solvedMarkSet.value = s
 }
 
 onMounted(fetchAttempts)
@@ -120,7 +128,7 @@ onMounted(fetchAttempts)
 
     <div v-if="result" class="mb-4 p-4 rounded-xl bg-green-50 border border-green-200 text-sm">
       <p class="font-medium text-green-800">{{ result.message }}</p>
-      <p class="text-green-600 mt-1">{{ result.is_winner ? '🏆 该用户获得奖品！' : '奖品已被他人领走' }}</p>
+      <p class="text-green-600 mt-1">{{ result.solved === 2 ? '🏆 该用户获得奖品！' : result.solved === 1 ? '答题正确但奖品已被领走' : '审核已通过' }}</p>
     </div>
 
     <Loading v-if="loading" />
@@ -143,7 +151,7 @@ onMounted(fetchAttempts)
               {{ reviewing === a.attempt_id ? '处理中...' : '通过' }}
             </button>
             <label v-if="isSuperAdmin && reviewing !== a.attempt_id" class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-sm cursor-pointer hover:bg-bg transition-colors select-none">
-              <input type="checkbox" v-model="markSolved" class="rounded border-border text-primary focus:ring-primary/30" />
+              <input type="checkbox" :checked="solvedMarkSet.has(a.attempt_id)" @change="toggleMark(a.attempt_id)" class="rounded border-border text-primary focus:ring-primary/30" />
               <span class="text-text">标记为答对</span>
               <span class="text-xs text-text-light">(发放奖品)</span>
             </label>

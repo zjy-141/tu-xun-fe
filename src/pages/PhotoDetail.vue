@@ -20,6 +20,7 @@ const { user } = useAuth()
 
 const photoId = computed(() => Number(route.params.id))
 const photo = ref<PhotoDetail | null>(null)
+const isPending = computed(() => photo.value?.status === 'pending')
 const liked = ref(false)
 const likeCount = ref(0)
 const loading = ref(true)
@@ -149,8 +150,10 @@ async function toggleAttemptLike(attemptId: number) {
 async function init() {
   await fetchDetail()
   fetchLikeStatus()
-  fetchComments()
-  fetchAttempts()
+  if (photo.value?.status !== 'pending') {
+    fetchComments()
+    fetchAttempts()
+  }
 }
 
 init()
@@ -175,7 +178,8 @@ init()
               </p>
             </div>
             <div class="flex items-center gap-2">
-              <span v-if="photo.solved" class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-medium">已破解</span>
+              <span v-if="isPending" class="px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-sm font-medium">审核中</span>
+              <span v-else-if="photo.solved" class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-medium">已破解</span>
               <span v-else class="px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-sm font-medium">待破解 · {{ photo.attempts_count }} 次尝试</span>
             </div>
           </div>
@@ -188,12 +192,16 @@ init()
 
           <div v-if="photo.current_user_attempt" class="mt-4 p-3 bg-bg rounded-lg text-sm">
             <span v-if="photo.current_user_attempt.status === 'pending'" class="text-accent-light">⏳ 你的答案正在审核中...</span>
-            <span v-else-if="photo.current_user_attempt.status === 'approved' && photo.current_user_attempt.is_winner" class="text-green-600">🎉 恭喜！你是第一个破解此机位的人！</span>
+            <span v-else-if="photo.current_user_attempt.status === 'approved' && photo.current_user_attempt.solved >= 2" class="text-green-600">🎉 恭喜！你是第一个破解此机位的人！</span>
             <span v-else-if="photo.current_user_attempt.status === 'approved'" class="text-text-light">✅ 你的答案已被确认，但奖品已被领走</span>
             <span v-else class="text-accent">❌ 你的答案未通过审核</span>
           </div>
 
-          <div class="flex items-center gap-3 mt-6">
+          <div v-if="isPending" class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-700">
+            ⏳ 该图片正在审核中，审核通过后将开放评论和答题功能。
+          </div>
+
+          <div v-if="!isPending" class="flex items-center gap-3 mt-6">
             <button @click="toggleLike" :class="['flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors', liked ? 'bg-red-50 text-red-500 border border-red-200' : 'bg-bg border border-border text-text-light hover:text-red-400']">
               {{ liked ? '❤️' : '🤍' }} {{ likeCount }}
             </button>
@@ -212,7 +220,7 @@ init()
       </div>
 
       <!-- 已通过的答题 -->
-      <div class="mt-8 bg-card rounded-xl border border-border p-6">
+      <div v-if="!isPending" class="mt-8 bg-card rounded-xl border border-border p-6">
         <h2 class="text-lg font-bold text-text mb-4">📝 答题记录 ({{ attemptsTotal }})</h2>
         <Loading v-if="attemptLoading" text="加载中..." />
         <Empty v-else-if="attempts.length === 0" icon="🔍" title="暂无答题" description="成为第一个答题者吧！" />
@@ -235,7 +243,7 @@ init()
       </div>
 
       <!-- 评论 -->
-      <div class="mt-8 bg-card rounded-xl border border-border p-6">
+      <div v-if="!isPending" class="mt-8 bg-card rounded-xl border border-border p-6">
         <h2 class="text-lg font-bold text-text mb-4">💬 评论 ({{ commentsTotal }})</h2>
 
         <div v-if="user" class="flex gap-2 mb-6">

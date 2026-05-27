@@ -66,14 +66,15 @@ onMounted(fetchConversations)
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto">
-    <h1 class="text-2xl font-bold text-text mb-6">消息</h1>
+  <div class="max-w-4xl mx-auto flex flex-col" style="height: calc(100vh - 130px)">
+    <h1 class="text-2xl font-bold text-text mb-4 shrink-0">消息</h1>
 
     <Loading v-if="loading" />
     <Empty v-else-if="conversations.length === 0" icon="📭" title="暂无消息" description="有新通知时这里会显示" />
-    <div v-else class="flex gap-0 bg-card rounded-xl border border-border overflow-hidden" style="min-height: 500px">
+
+    <div v-else class="flex flex-1 bg-card rounded-xl border border-border overflow-hidden min-h-0">
       <!-- Conversation list -->
-      <div class="w-1/3 border-r border-border overflow-y-auto" style="max-height: 600px">
+      <div class="w-1/3 border-r border-border overflow-y-auto flex-shrink-0">
         <div
           v-for="conv in conversations"
           :key="conv.partner_id"
@@ -97,12 +98,12 @@ onMounted(fetchConversations)
       </div>
 
       <!-- Chat area -->
-      <div class="flex-1 flex flex-col" style="max-height: 600px">
+      <div class="flex-1 flex flex-col min-w-0">
         <div v-if="!activePartnerId" class="flex-1 flex items-center justify-center text-text-light">
           选择一个会话开始聊天
         </div>
         <template v-else>
-          <div class="flex-1 overflow-y-auto p-4 space-y-3">
+          <div class="flex-1 overflow-y-auto px-4 py-3 space-y-4">
             <Loading v-if="chatLoading" text="加载中..." />
             <div v-else-if="chatMessages.length === 0" class="text-center text-text-light py-8">暂无消息</div>
             <template v-else>
@@ -111,14 +112,14 @@ onMounted(fetchConversations)
                 :key="msg.id"
                 :class="['flex', msg.is_mine ? 'justify-end' : 'justify-start']"
               >
-                <div :class="['max-w-[70%] px-3 py-2 rounded-lg text-sm', msg.is_mine ? 'bg-primary text-white' : 'bg-bg text-text']">
+                <div :class="['max-w-[75%] px-4 py-2.5 rounded-xl text-sm leading-relaxed', msg.is_mine ? 'bg-primary text-white' : 'bg-bg text-text']">
                   <p class="whitespace-pre-wrap">{{ msg.content }}</p>
-                  <span class="text-[10px] opacity-60 mt-1 block">{{ fmt(msg.created_at) }}</span>
+                  <span class="text-[10px] opacity-50 mt-1.5 block">{{ fmt(msg.created_at) }}</span>
                 </div>
               </div>
             </template>
           </div>
-          <div class="border-t border-border p-3 flex gap-2">
+          <div class="border-t border-border p-3 flex gap-2 shrink-0">
             <input
               v-model="chatInput"
               type="text"
@@ -126,7 +127,7 @@ onMounted(fetchConversations)
               class="flex-1 px-3 py-2 rounded-lg border border-border bg-bg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
               @keyup.enter="sendMessage"
             />
-            <button @click="sendMessage" :disabled="chatSending || !chatInput.trim()" class="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary-light disabled:opacity-50 transition-colors">
+            <button @click="sendMessage" :disabled="chatSending || !chatInput.trim()" class="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary-light disabled:opacity-50 transition-colors shrink-0">
               {{ chatSending ? '...' : '发送' }}
             </button>
           </div>

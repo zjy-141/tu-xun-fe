@@ -77,8 +77,10 @@ export interface PhotoDetail {
   description: string
   image_url: string
   author: UserBrief
+  status?: string
   solved: boolean
   attempts_count: number
+  likes_count: number
   created_at: string
   winner?: AttemptForm
   current_user_attempt?: CurrentUserAttempt
@@ -87,7 +89,7 @@ export interface PhotoDetail {
 export interface CurrentUserAttempt {
   id: number
   status: AttemptStatus
-  is_winner: boolean
+  solved: number
 }
 
 export interface UploadPhotoForm {
@@ -136,7 +138,7 @@ export interface MyAttempt {
   image_url: string
   guessed_location: string
   status: AttemptStatus
-  is_winner: boolean
+  solved: number
   reviewed_at: string | null
 }
 
@@ -204,6 +206,7 @@ export interface PendingAttempt {
   thumb_url: string
   location_secret: string
   submitted_at: string
+  solved?: number
 }
 
 export interface PendingAttemptsResponse {
@@ -214,7 +217,7 @@ export interface PendingAttemptsResponse {
 export interface ReviewAttemptResponse {
   attempt_id: number
   status: AttemptStatus
-  is_winner: boolean
+  solved: number
   photo_solved: boolean
   message: string
 }

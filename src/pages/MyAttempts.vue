@@ -45,7 +45,7 @@ onMounted(async () => {
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 mb-1">
               <span :class="['px-2 py-0.5 rounded-full text-xs font-medium', statusLabel(attempt.status).color]">{{ statusLabel(attempt.status).text }}</span>
-              <span v-if="attempt.is_winner" class="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">🏆 获奖</span>
+              <span v-if="attempt.solved >= 2" class="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">🏆 获奖</span>
             </div>
             <p class="text-sm text-text">猜测地点：{{ attempt.guessed_location }}</p>
             <p v-if="attempt.reviewed_at" class="text-xs text-text-light mt-1">审核时间：{{ formatDateTime(attempt.reviewed_at) }}</p>
