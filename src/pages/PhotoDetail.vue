@@ -12,6 +12,7 @@ import { formatDate, formatDateTime } from '../utils/format'
 import Loading from '../components/Loading.vue'
 import Empty from '../components/Empty.vue'
 import Pagination from '../components/Pagination.vue'
+import ImageViewer from '../components/ImageViewer.vue'
 import type { PhotoDetail, CommentForm, AttemptForm } from '../types'
 
 const route = useRoute()
@@ -39,6 +40,14 @@ const attemptLoading = ref(false)
 
 const commentLikeMap = ref<Record<number, { liked: boolean; count: number }>>({})
 const attemptLikeMap = ref<Record<number, { liked: boolean; count: number }>>({})
+
+const viewerVisible = ref(false)
+const viewerSrc = ref('')
+
+function openViewer(src: string) {
+  viewerSrc.value = src
+  viewerVisible.value = true
+}
 
 async function fetchDetail() {
   loading.value = true
@@ -166,8 +175,8 @@ init()
 
     <template v-else>
       <div class="bg-card rounded-xl overflow-hidden border border-border shadow-sm">
-        <div class="aspect-[16/9] sm:aspect-[2/1] bg-gray-100">
-          <img :src="photo.image_url" :alt="photo.title" class="w-full h-full object-contain" />
+        <div class="aspect-[16/9] sm:aspect-[2/1] bg-gray-100 cursor-zoom-in">
+          <img :src="photo.image_url" :alt="photo.title" class="w-full h-full object-contain" @click="openViewer(`/api/photos/${photo.id}/image`)" />
         </div>
         <div class="p-6">
           <div class="flex items-start justify-between flex-wrap gap-3">
@@ -226,7 +235,7 @@ init()
         <Empty v-else-if="attempts.length === 0" icon="🔍" title="暂无答题" description="成为第一个答题者吧！" />
         <div v-else class="space-y-4">
           <div v-for="a in attempts" :key="a.id" class="flex gap-4 p-4 bg-bg rounded-lg">
-            <img :src="a.image_url" alt="答题照片" class="w-24 h-24 rounded-lg object-cover shrink-0" />
+            <img :src="a.image_url" alt="答题照片" class="w-24 h-24 rounded-lg object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity" @click="openViewer(a.image_url)" />
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-1">
                 <router-link v-if="a.user" :to="`/users/${a.user.id}`" class="text-sm font-medium text-primary hover:underline">{{ a.user.name }}</router-link><span v-else class="text-sm font-medium text-text">{{ a.user?.name || '未知' }}</span>
@@ -285,5 +294,7 @@ init()
         </div>
       </div>
     </template>
+
+    <ImageViewer :src="viewerSrc" :visible="viewerVisible" @close="viewerVisible = false" />
   </div>
 </template>
