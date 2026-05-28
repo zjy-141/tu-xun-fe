@@ -15,9 +15,9 @@
         <router-link to="/photos" class="px-6 py-3 rounded-xl bg-primary text-white font-medium hover:bg-primary-light transition-colors shadow-sm">
           开始探索
         </router-link>
-        <router-link to="/register" class="px-6 py-3 rounded-xl border border-border text-text font-medium hover:bg-bg transition-colors">
+        <a href="https://www.tiaozhan.com" target="_blank" class="px-6 py-3 rounded-xl border border-border text-text font-medium hover:bg-bg transition-colors">
           加入我们
-        </router-link>
+        </a>
       </div>
     </section>
 
