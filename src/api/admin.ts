@@ -7,6 +7,7 @@ import type {
   ReviewPhotoResponse,
   ReviewAttemptResponse,
   ClaimPrizeResponse,
+  AdminPrizesResponse,
   PendingCommentsResponse,
   ReviewCommentResponse,
   UpdateAdminLevelResponse,
@@ -27,6 +28,9 @@ export const adminApi = {
 
   claimPrize: (prizeId: number) =>
     client.put<ApiResponse<ClaimPrizeResponse>>(`/admin/prizes/${prizeId}/claim`),
+
+  getPrizes: (params?: { page?: number; limit?: number; status?: string }) =>
+    client.get<ApiResponse<AdminPrizesResponse>>('/admin/prizes', { params }),
 
   getPendingComments: (params?: { page?: number; limit?: number }) =>
     client.get<ApiResponse<PendingCommentsResponse>>('/admin/comments/pending', { params }),

@@ -8,11 +8,11 @@ import { extractApiError } from '../api/client'
 const { register } = useAuth()
 const router = useRouter()
 
-const form = ref({ student_id: '', name: '', password: '', phone: '', email: '', qq: '', weixin: '' })
+const form = ref({ student_id: '', name: '', password: '', phone: '', email: '', qq: '', weixin: '', gender: 'secret' })
 const submitting = ref(false)
 
 async function handleSubmit() {
-  if (!form.value.student_id || !form.value.name || !form.value.password || !form.value.phone) {
+  if (!form.value.student_id || !form.value.name || !form.value.password || !form.value.phone || !form.value.gender) {
     showToast('error', '请填写所有必填字段')
     return
   }
@@ -49,6 +49,15 @@ async function handleSubmit() {
       <div>
         <label class="block text-sm font-medium text-text mb-1">昵称</label>
         <input v-model="form.name" type="text" class="w-full px-3 py-2.5 rounded-lg border border-border bg-bg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" placeholder="给自己取个名字" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-text mb-1">性别 <span class="text-accent">*</span></label>
+        <div class="flex gap-3">
+          <label v-for="opt in [{v:'male',l:'男'},{v:'female',l:'女'},{v:'other',l:'其他'},{v:'secret',l:'保密'}]" :key="opt.v" class="flex items-center gap-1.5 cursor-pointer">
+            <input v-model="form.gender" type="radio" :value="opt.v" class="text-primary focus:ring-primary/20" />
+            <span class="text-sm text-text">{{ opt.l }}</span>
+          </label>
+        </div>
       </div>
       <div>
         <label class="block text-sm font-medium text-text mb-1">手机号 <span class="text-accent">*</span></label>

@@ -8,6 +8,11 @@ import { formatDate } from '../utils/format'
 import Loading from '../components/Loading.vue'
 import type { UserProfileResponse, PhotoListItem, AttemptForm } from '../types'
 
+const genderLabel = (g?: string) => {
+  const map: Record<string, string> = { male: '男', female: '女', other: '其他', secret: '保密' }
+  return map[g || ''] || g || ''
+}
+
 const route = useRoute()
 const userId = computed(() => Number(route.params.id))
 
@@ -52,7 +57,10 @@ onMounted(fetchAll)
             <span v-else>{{ profile.name.charAt(0) }}</span>
           </div>
           <h2 class="text-xl font-bold text-white mt-3">{{ profile.name }}</h2>
-          <span v-if="profile.level >= 1" class="inline-block mt-2 px-3 py-0.5 rounded-full bg-white/20 text-white text-xs font-medium">管理员</span>
+          <div class="flex items-center justify-center gap-2 mt-1">
+            <span v-if="profile.gender" class="text-white/70 text-sm">{{ genderLabel(profile.gender) }}</span>
+            <span v-if="profile.level >= 1" class="inline-block px-2 py-0.5 rounded-full bg-white/20 text-white text-xs font-medium">管理员</span>
+          </div>
         </div>
 
         <div class="grid grid-cols-3 border-t border-border">

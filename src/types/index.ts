@@ -25,6 +25,7 @@ export interface User {
   level: number
   qq: string
   weixin: string
+  gender?: string
   prize_count?: number
   description?: string
   photo_count?: number
@@ -41,6 +42,7 @@ export interface RegisterParams {
   student_id: string
   name: string
   password: string
+  gender: string
   phone: string
   email?: string
   qq?: string
@@ -227,6 +229,22 @@ export interface ClaimPrizeResponse {
   status: string
 }
 
+export interface AdminPrizeItem {
+  id: number
+  photo_id: number
+  photo_title: string
+  user_id: number
+  user_name: string
+  status: string
+  prize_type: string
+  awarded_at: string | null
+}
+
+export interface AdminPrizesResponse {
+  total: number
+  prizes: AdminPrizeItem[]
+}
+
 export type PrizeStatus = 'unclaimed' | 'claimed'
 
 export interface PrizeItem {
@@ -329,6 +347,7 @@ export interface UserProfileResponse {
   id: number
   name: string
   avatar_url: string
+  gender?: string
   level: number
   description: string
   prize_count: number
@@ -343,6 +362,7 @@ export interface ChangePasswordParams {
 
 export interface UpdateProfileParams {
   name?: string
+  gender?: string
   phone?: string
   email?: string
   qq?: string

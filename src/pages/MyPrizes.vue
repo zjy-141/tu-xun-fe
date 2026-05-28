@@ -4,6 +4,7 @@ import { prizesApi } from '../api/prizes'
 import Loading from '../components/Loading.vue'
 import Empty from '../components/Empty.vue'
 import { formatDate } from '../utils/format'
+import type { PrizeItem } from '../types'
 
 const prizes = ref<PrizeItem[]>([])
 const loading = ref(true)
@@ -13,8 +14,7 @@ onMounted(async () => {
   try {
     const res = await prizesApi.getMyPrizes()
     if (res.data.success) {
-      const d = res.data.data as unknown as { total: number; prizes: PrizeItem[] }
-      prizes.value = d.prizes
+      prizes.value = res.data.data.prizes
     }
   } catch { /* ignore */ }
   finally { loading.value = false }
